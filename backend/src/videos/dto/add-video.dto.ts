@@ -1,6 +1,6 @@
 export class GenerateVideoDto {
-  readonly cropRight: string
-  readonly cropLeft: string
+  readonly cropOffset: string
+  readonly cropLimit: string
   readonly brightness: string
   readonly contrast: string
   readonly saturation: string

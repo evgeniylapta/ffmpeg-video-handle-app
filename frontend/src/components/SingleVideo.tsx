@@ -6,8 +6,8 @@ import axios from 'axios';
 
 type TState = {
   imageSrc?: string
-  cropLeft?: string
-  cropRight?: string
+  cropLimit?: string
+  cropOffset?: string
   brightness?: string
   contrast?: string
   saturation?: string
@@ -15,7 +15,7 @@ type TState = {
 }
 
 function useGenerate(fileInputRef: MutableRefObject<any>, logoInputRef: MutableRefObject<any>, audioInputRef: MutableRefObject<any>) {
-  return async ({ cropRight, cropLeft, brightness, contrast, saturation, gamma }: TState, callback: (url: string) => void) => {
+  return async ({ cropOffset, cropLimit, brightness, contrast, saturation, gamma }: TState, callback: (url: string) => void) => {
     const video = fileInputRef.current?.files[0]
     const logo = logoInputRef.current?.files[0]
     const audio = audioInputRef.current?.files[0]
@@ -37,12 +37,12 @@ function useGenerate(fileInputRef: MutableRefObject<any>, logoInputRef: MutableR
       formData.append('audio', audio)
     }
 
-    if (cropRight) {
-      formData.append('cropRight', cropRight)
+    if (cropOffset) {
+      formData.append('cropOffset', cropOffset)
     }
 
-    if (cropLeft) {
-      formData.append('cropLeft', cropLeft)
+    if (cropLimit) {
+      formData.append('cropLimit', cropLimit)
     }
 
     if (brightness) {
@@ -83,7 +83,7 @@ const SingleVideo: FC<{ title: string, onVideoGenerated: (url: string) => void }
   const logoInputRef = useRef<any>()
   const audioInputRef = useRef<any>()
 
-  const { imageSrc, cropLeft, cropRight, brightness, contrast, saturation, gamma } = state
+  const { imageSrc, cropLimit, cropOffset, brightness, contrast, saturation, gamma } = state
 
   const generate = useGenerate(videoInputRef, logoInputRef, audioInputRef)
 
@@ -106,15 +106,15 @@ const SingleVideo: FC<{ title: string, onVideoGenerated: (url: string) => void }
           <br/>
           <br/>
 
-          Crop left
+          Crop limit
           <br/>
-          <input type="text" value={cropLeft} onChange={(e) => setState({ cropLeft: e.target.value })}/>
+          <input type="text" value={cropLimit} onChange={(e) => setState({ cropLimit: e.target.value })}/>
 
           <br/>
 
-          Crop right
+          Crop offset
           <br/>
-          <input type="text" value={cropRight} onChange={(e) => setState({ cropRight: e.target.value })}/>
+          <input type="text" value={cropOffset} onChange={(e) => setState({ cropOffset: e.target.value })}/>
 
           <br/>
           <br/>

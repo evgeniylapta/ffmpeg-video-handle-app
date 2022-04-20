@@ -12,5 +12,5 @@ export declare class FfmpegService {
     private removeFile;
     private videoAddAudioExec;
     private videoFiltersExec;
-    generateVideo({ cropLeft, cropRight, brightness, contrast, gamma, saturation }: GenerateVideoDto, video: any, audio: any): Promise<string>;
+    generateVideo({ cropOffset, cropLimit, brightness, contrast, gamma, saturation }: GenerateVideoDto, video: any, audio: any): Promise<string>;
 }

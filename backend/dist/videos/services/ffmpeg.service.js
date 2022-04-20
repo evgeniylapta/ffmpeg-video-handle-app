@@ -78,12 +78,15 @@ let FfmpegService = class FfmpegService {
             throw new common_1.InternalServerErrorException();
         }
     }
-    async videoCropExec(originalFileName, { cropLeft, cropRight }) {
+    async videoCropExec(originalFileName, { cropOffset, cropLimit }) {
+        if (!cropOffset || !cropLimit) {
+            return originalFileName;
+        }
         return await this.nextFileGenerationWrap(originalFileName, async (originalFilePath, newFilePath) => {
             await this.execCommand([
-                '-ss', cropLeft || '0',
+                '-ss', cropOffset || '0',
                 '-i', originalFilePath,
-                '-c', 'copy', '-t', cropRight || '0',
+                '-c', 'copy', '-t', cropLimit || '0',
                 newFilePath
             ]);
         });
@@ -123,10 +126,11 @@ let FfmpegService = class FfmpegService {
             ]);
         });
     }
-    async generateVideo({ cropLeft, cropRight, brightness, contrast, gamma, saturation }, video, audio) {
+    async generateVideo({ cropOffset, cropLimit, brightness, contrast, gamma, saturation }, video, audio) {
         try {
             let videoName = await this.filesService.createFile(video);
             videoName = await this.videoAddAudioExec(videoName, audio);
+            videoName = await this.videoCropExec(videoName, { cropOffset, cropLimit });
             videoName = await this.videoFiltersExec(videoName, { brightness, contrast, gamma, saturation });
             return videoName;
         }
