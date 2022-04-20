@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Body, Controller, Get, Post, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { FfmpegService } from './services/ffmpeg.service';
 import { FilesService } from './services/files.service';
-import { CreatePostDto } from './dto/add-video.dto';
+import { GenerateVideoDto } from './dto/add-video.dto';
+import { CombineVideosDto } from './dto/combine-videos.dto';
 
 
 @Controller('videos')
@@ -10,14 +11,38 @@ export class VideosController {
   constructor(private ffmpegService: FfmpegService, private filesService: FilesService) {
   }
 
-  @Post('add')
-  @UseInterceptors(FileInterceptor('video'))
-  addVideo(@Body() { name }: CreatePostDto, @UploadedFile() video) {
-    return this.filesService.createFile(video, name)
+  @Post('edit')
+  // @UseInterceptors(FileInterceptor('video'))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'video', maxCount: 1 },
+    { name: 'audio', maxCount: 1 },
+  ]))
+  // addVideo(@Body() dto: GenerateVideoDto, @UploadedFile() video) {
+  addVideo(@Body() dto: GenerateVideoDto, @UploadedFiles() files: { video?: any[], audio?: any[] }) {
+    // return this.filesService.createFile(video)
+
+    const video = files.video?.[0]
+    const audio = files.audio?.[0]
+
+    return this.ffmpegService.generateVideo(dto, video, audio)
   }
 
-  @Get('test')
-  getByValue() {
-    return this.ffmpegService.test()
+  // @UseInterceptors(FileFieldsInterceptor([
+  //   { name: 'avatar', maxCount: 1 },
+  //   { name: 'background', maxCount: 1 },
+  // ]))
+  // uploadFile(@UploadedFiles() files: { avatar?: Express.Multer.File[], background?: Express.Multer.File[] }) {
+  //   console.log(files);
+  // }
+
+
+  @Post('combine')
+  combineVideos(@Body() dto: CombineVideosDto) {
+    return this.ffmpegService.combineVideos(dto)
   }
+
+  // @Get('test')
+  // getByValue() {
+  //   return this.ffmpegService.test()
+  // }
 }

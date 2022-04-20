@@ -10,9 +10,12 @@ exports.FilesService = void 0;
 const common_1 = require("@nestjs/common");
 const fs = require("fs");
 const path = require("path");
+const uuid = require("uuid");
 let FilesService = class FilesService {
-    async createFile(file, fileName) {
+    async createFile(file) {
         try {
+            const format = this.getFormatFromFile(file);
+            const fileName = this.generateTempFileName(format);
             const filePath = path.resolve(__dirname, '..', '..', 'static');
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath, { recursive: true });
@@ -23,6 +26,16 @@ let FilesService = class FilesService {
         catch (_a) {
             throw new common_1.InternalServerErrorException();
         }
+    }
+    getFormatFromFile(file) {
+        return this.getFormatFromFileName(file.originalname);
+    }
+    getFormatFromFileName(fileName) {
+        const [, format] = fileName.split('.');
+        return format;
+    }
+    generateTempFileName(format) {
+        return `${uuid.v4()}.${format}`;
     }
 };
 FilesService = __decorate([

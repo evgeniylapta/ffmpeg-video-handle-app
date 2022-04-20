@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreatePostDto = void 0;
-class CreatePostDto {
+exports.GenerateVideoDto = void 0;
+class GenerateVideoDto {
 }
-exports.CreatePostDto = CreatePostDto;
+exports.GenerateVideoDto = GenerateVideoDto;
 //# sourceMappingURL=add-video.dto.js.map

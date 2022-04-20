@@ -18,33 +18,41 @@ const platform_express_1 = require("@nestjs/platform-express");
 const ffmpeg_service_1 = require("./services/ffmpeg.service");
 const files_service_1 = require("./services/files.service");
 const add_video_dto_1 = require("./dto/add-video.dto");
+const combine_videos_dto_1 = require("./dto/combine-videos.dto");
 let VideosController = class VideosController {
     constructor(ffmpegService, filesService) {
         this.ffmpegService = ffmpegService;
         this.filesService = filesService;
     }
-    addVideo({ name }, video) {
-        return this.filesService.createFile(video, name);
+    addVideo(dto, files) {
+        var _a, _b;
+        const video = (_a = files.video) === null || _a === void 0 ? void 0 : _a[0];
+        const audio = (_b = files.audio) === null || _b === void 0 ? void 0 : _b[0];
+        return this.ffmpegService.generateVideo(dto, video, audio);
     }
-    getByValue() {
-        return this.ffmpegService.test();
+    combineVideos(dto) {
+        return this.ffmpegService.combineVideos(dto);
     }
 };
 __decorate([
-    (0, common_1.Post)('add'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('video')),
+    (0, common_1.Post)('edit'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
+        { name: 'video', maxCount: 1 },
+        { name: 'audio', maxCount: 1 },
+    ])),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [add_video_dto_1.CreatePostDto, Object]),
+    __metadata("design:paramtypes", [add_video_dto_1.GenerateVideoDto, Object]),
     __metadata("design:returntype", void 0)
 ], VideosController.prototype, "addVideo", null);
 __decorate([
-    (0, common_1.Get)('test'),
+    (0, common_1.Post)('combine'),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [combine_videos_dto_1.CombineVideosDto]),
     __metadata("design:returntype", void 0)
-], VideosController.prototype, "getByValue", null);
+], VideosController.prototype, "combineVideos", null);
 VideosController = __decorate([
     (0, common_1.Controller)('videos'),
     __metadata("design:paramtypes", [ffmpeg_service_1.FfmpegService, files_service_1.FilesService])

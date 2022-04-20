@@ -1,14 +1,15 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import * as fs from 'fs'
 import * as path from 'path'
+import * as uuid from 'uuid'
 
 @Injectable()
 export class FilesService {
-  async createFile(file, fileName?: string): Promise<string> {
+  async createFile(file): Promise<string> {
     try {
+      const format = this.getFormatFromFile(file)
 
-      // const fileName = `${uuid.v4()}.jpg`
-
+      const fileName = this.generateTempFileName(format)
 
       const filePath = path.resolve(__dirname, '..', '..', 'static')
 
@@ -22,5 +23,19 @@ export class FilesService {
     } catch {
       throw new InternalServerErrorException()
     }
+  }
+
+  public getFormatFromFile(file: any) {
+    return this.getFormatFromFileName(file.originalname)
+  }
+
+  public getFormatFromFileName(fileName: any) {
+    const [,format] = fileName.split('.')
+
+    return format
+  }
+
+  public generateTempFileName(format: string) {
+    return `${uuid.v4()}.${format}`
   }
 }
