@@ -14,11 +14,17 @@ type TState = {
   gamma?: string
 }
 
-function useGenerate(fileInputRef: MutableRefObject<any>, logoInputRef: MutableRefObject<any>, audioInputRef: MutableRefObject<any>) {
+function useGenerate(
+  fileInputRef: MutableRefObject<any>,
+  logoInputRef: MutableRefObject<any>,
+  audioInputRef: MutableRefObject<any>,
+  subtitlesInputRef: MutableRefObject<any>
+) {
   return async ({ cropOffset, cropLimit, brightness, contrast, saturation, gamma }: TState, callback: (url: string) => void) => {
     const video = fileInputRef.current?.files[0]
     const logo = logoInputRef.current?.files[0]
     const audio = audioInputRef.current?.files[0]
+    const subtitles = subtitlesInputRef.current?.files[0]
 
     const formData = new FormData();
 
@@ -35,6 +41,10 @@ function useGenerate(fileInputRef: MutableRefObject<any>, logoInputRef: MutableR
 
     if (audio) {
       formData.append('audio', audio)
+    }
+
+    if (subtitles) {
+      formData.append('subtitles', subtitles)
     }
 
     if (cropOffset) {
@@ -82,10 +92,11 @@ const SingleVideo: FC<{ title: string, onVideoGenerated: (url: string) => void }
   const videoInputRef = useRef<any>()
   const logoInputRef = useRef<any>()
   const audioInputRef = useRef<any>()
+  const subtitlesInputRef = useRef<any>()
 
   const { imageSrc, cropLimit, cropOffset, brightness, contrast, saturation, gamma } = state
 
-  const generate = useGenerate(videoInputRef, logoInputRef, audioInputRef)
+  const generate = useGenerate(videoInputRef, logoInputRef, audioInputRef, subtitlesInputRef)
 
   const options = useMemo(() => imageSrc && getVideoOptions(imageSrc), [imageSrc])
 
@@ -106,15 +117,18 @@ const SingleVideo: FC<{ title: string, onVideoGenerated: (url: string) => void }
           <br/>
           <br/>
 
+          Crop offset
+          <br/>
+          <input type="text" value={cropOffset} onChange={(e) => setState({ cropOffset: e.target.value })}/>
+
+          <br/>
+
+
           Crop limit
           <br/>
           <input type="text" value={cropLimit} onChange={(e) => setState({ cropLimit: e.target.value })}/>
 
           <br/>
-
-          Crop offset
-          <br/>
-          <input type="text" value={cropOffset} onChange={(e) => setState({ cropOffset: e.target.value })}/>
 
           <br/>
           <br/>
@@ -129,6 +143,13 @@ const SingleVideo: FC<{ title: string, onVideoGenerated: (url: string) => void }
           Audio
           <br/>
           <input type="file" ref={audioInputRef}/>
+
+          <br/>
+          <br/>
+
+          Subtitles
+          <br/>
+          <input type="file" ref={subtitlesInputRef}/>
 
           <br/>
           <br/>

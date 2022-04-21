@@ -16,7 +16,7 @@ let VideosModule = class VideosModule {
 VideosModule = __decorate([
     (0, common_1.Module)({
         providers: [files_service_1.FilesService, ffmpeg_service_1.FfmpegService],
-        controllers: [videos_controller_1.VideosController]
+        controllers: [videos_controller_1.VideosController],
     })
 ], VideosModule);
 exports.VideosModule = VideosModule;

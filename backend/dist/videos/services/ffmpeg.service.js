@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FfmpegService = void 0;
 const common_1 = require("@nestjs/common");
-const { spawn, } = require('child_process');
+const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require("path");
 const files_service_1 = require("./files.service");
@@ -24,16 +24,16 @@ let FfmpegService = class FfmpegService {
         console.log(`ffmpeg process start`);
         console.log(`============================================`);
         return new Promise((resolve, reject) => {
-            ls.stdout.on('data', data => {
+            ls.stdout.on('data', (data) => {
                 console.log(`stdout: ${data}`);
             });
-            ls.stderr.on('data', data => {
+            ls.stderr.on('data', (data) => {
                 console.log(`stderr: ${data}`);
             });
             ls.on('error', (error) => {
                 reject(`error: ${error.message}`);
             });
-            ls.on('close', code => {
+            ls.on('close', (code) => {
                 resolve();
                 console.log(`ffmpeg process exited with code ${code}`);
                 console.log(`============================================`);
@@ -50,13 +50,14 @@ let FfmpegService = class FfmpegService {
             const videoFormat = await this.filesService.getFormatFromFileName(first);
             const resultFileName = this.filesService.generateTempFileName(videoFormat);
             const resultFilePath = this.getFilePathByName(resultFileName);
-            console.log('resultFilePath');
-            console.log(resultFilePath);
             await this.execCommand([
-                '-i', firstFilePath,
-                '-i', secondFilePath,
-                '-filter_complex', '[0]settb=AVTB[v0];[1]settb=AVTB[v1]; [v0][v1]xfade=transition=hlslice:duration=1:offset=5,format=yuv420p',
-                resultFilePath
+                '-i',
+                firstFilePath,
+                '-i',
+                secondFilePath,
+                '-filter_complex',
+                '[0]settb=AVTB[v0];[1]settb=AVTB[v1]; [v0][v1]xfade=transition=hlslice:duration=1:offset=5,format=yuv420p',
+                resultFilePath,
             ]);
             return resultFileName;
         }
@@ -78,21 +79,45 @@ let FfmpegService = class FfmpegService {
             throw new common_1.InternalServerErrorException();
         }
     }
-    async videoCropExec(originalFileName, { cropOffset, cropLimit }) {
+    async videoCropExec(originalFileName, { cropOffset, cropLimit, }) {
         if (!cropOffset || !cropLimit) {
             return originalFileName;
         }
         return await this.nextFileGenerationWrap(originalFileName, async (originalFilePath, newFilePath) => {
             await this.execCommand([
-                '-ss', cropOffset || '0',
-                '-i', originalFilePath,
-                '-c', 'copy', '-t', cropLimit || '0',
-                newFilePath
+                '-ss',
+                cropOffset || '0',
+                '-i',
+                originalFilePath,
+                '-c',
+                'copy',
+                '-t',
+                cropLimit || '0',
+                newFilePath,
             ]);
         });
     }
     removeFile(filePath) {
         fs.unlinkSync(filePath);
+    }
+    async logoAddVideoExec(originalFileName, logoFile) {
+        if (!logoFile) {
+            return originalFileName;
+        }
+        const logoFileName = await this.filesService.createFile(logoFile);
+        const logoFilePath = this.getFilePathByName(logoFileName);
+        return await this.nextFileGenerationWrap(originalFileName, async (originalFilePath, newFilePath) => {
+            await this.execCommand([
+                '-i',
+                originalFilePath,
+                '-i',
+                logoFilePath,
+                '-filter_complex',
+                '[0:v]overlay=10:10',
+                newFilePath,
+            ]);
+            this.removeFile(logoFilePath);
+        });
     }
     async videoAddAudioExec(originalFileName, audioFile) {
         if (!audioFile) {
@@ -101,12 +126,37 @@ let FfmpegService = class FfmpegService {
         const audioFileName = await this.filesService.createFile(audioFile);
         const audioFilePath = await this.getFilePathByName(audioFileName);
         return await this.nextFileGenerationWrap(originalFileName, async (originalFilePath, newFilePath) => {
-            await this.execCommand(['-i', audioFilePath, '-i', originalFilePath, '-shortest', newFilePath]);
+            await this.execCommand([
+                '-i',
+                audioFilePath,
+                '-i',
+                originalFilePath,
+                '-shortest',
+                newFilePath,
+            ]);
             this.removeFile(audioFilePath);
         });
     }
+    async videoSubtitlesAddExec(originalFileName, subtitlesFile) {
+        if (!subtitlesFile) {
+            return originalFileName;
+        }
+        const subtitlesFileName = await this.filesService.createFile(subtitlesFile);
+        const subtitlesFilePath = await this.getFilePathByName(subtitlesFileName);
+        return await this.nextFileGenerationWrap(originalFileName, async (originalFilePath, newFilePath) => {
+            await this.execCommand([
+                '-i',
+                subtitlesFilePath,
+                '-i',
+                originalFilePath,
+                '-shortest',
+                newFilePath,
+            ]);
+            this.removeFile(subtitlesFilePath);
+        });
+    }
     async videoFiltersExec(originalFileName, props) {
-        if (Object.entries(props).every(item => !item)) {
+        if (Object.entries(props).every((item) => !item)) {
             return originalFileName;
         }
         const { brightness, contrast, saturation, gamma } = props;
@@ -115,22 +165,29 @@ let FfmpegService = class FfmpegService {
             const contrastString = contrast ? 'contrast=' + contrast : '';
             const saturationString = saturation ? 'saturation=' + saturation : '';
             const gammaString = gamma ? 'gamma=' + gamma : '';
-            const eqString = [brightnessString, contrastString, saturationString, gammaString]
-                .filter(item => item)
+            const eqString = [
+                brightnessString,
+                contrastString,
+                saturationString,
+                gammaString,
+            ]
+                .filter((item) => item)
                 .join(':');
             await this.execCommand([
-                '-i', originalFilePath,
+                '-i',
+                originalFilePath,
                 '-vf',
                 `eq=${eqString}`,
-                newFilePath
+                newFilePath,
             ]);
         });
     }
-    async generateVideo({ cropOffset, cropLimit, brightness, contrast, gamma, saturation }, video, audio) {
+    async generateVideo({ cropOffset, cropLimit, brightness, contrast, gamma, saturation }, video, audio, logo, subtitles) {
         try {
             let videoName = await this.filesService.createFile(video);
             videoName = await this.videoAddAudioExec(videoName, audio);
-            videoName = await this.videoCropExec(videoName, { cropOffset, cropLimit });
+            videoName = await this.logoAddVideoExec(videoName, logo);
+            videoName = await this.videoCropExec(videoName, { cropOffset, cropLimit, });
             videoName = await this.videoFiltersExec(videoName, { brightness, contrast, gamma, saturation });
             return videoName;
         }

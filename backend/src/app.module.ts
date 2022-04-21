@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { VideosModule } from './videos/videos.module';
-import * as path from "path";
+import * as path from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({

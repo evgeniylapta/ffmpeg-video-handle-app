@@ -5,6 +5,6 @@ import { FilesService } from './services/files.service';
 
 @Module({
   providers: [FilesService, FfmpegService],
-  controllers: [VideosController]
+  controllers: [VideosController],
 })
 export class VideosModule {}

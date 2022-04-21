@@ -31,6 +31,7 @@ export function usePlayerHandle() {
 }
 
 export function getVideoOptions(imageName: string): videojs.PlayerOptions {
+  console.log('imageName', imageName)
   return {
     autoplay: false,
     playbackRates: [0.5, 1, 1.25, 1.5, 2],

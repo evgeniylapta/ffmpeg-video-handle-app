@@ -9,6 +9,8 @@ export declare class VideosController {
     addVideo(dto: GenerateVideoDto, files: {
         video?: any[];
         audio?: any[];
+        logo?: any[];
+        subtitles?: any[];
     }): Promise<string>;
     combineVideos(dto: CombineVideosDto): Promise<string>;
 }

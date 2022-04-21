@@ -25,10 +25,12 @@ let VideosController = class VideosController {
         this.filesService = filesService;
     }
     addVideo(dto, files) {
-        var _a, _b;
+        var _a, _b, _c, _d;
         const video = (_a = files.video) === null || _a === void 0 ? void 0 : _a[0];
         const audio = (_b = files.audio) === null || _b === void 0 ? void 0 : _b[0];
-        return this.ffmpegService.generateVideo(dto, video, audio);
+        const logo = (_c = files.logo) === null || _c === void 0 ? void 0 : _c[0];
+        const subtitles = (_d = files.subtitles) === null || _d === void 0 ? void 0 : _d[0];
+        return this.ffmpegService.generateVideo(dto, video, audio, logo, subtitles);
     }
     combineVideos(dto) {
         return this.ffmpegService.combineVideos(dto);
@@ -39,6 +41,8 @@ __decorate([
     (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
         { name: 'video', maxCount: 1 },
         { name: 'audio', maxCount: 1 },
+        { name: 'logo', maxCount: 1 },
+        { name: 'subtitles', maxCount: 1 },
     ])),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.UploadedFiles)()),
@@ -55,7 +59,8 @@ __decorate([
 ], VideosController.prototype, "combineVideos", null);
 VideosController = __decorate([
     (0, common_1.Controller)('videos'),
-    __metadata("design:paramtypes", [ffmpeg_service_1.FfmpegService, files_service_1.FilesService])
+    __metadata("design:paramtypes", [ffmpeg_service_1.FfmpegService,
+        files_service_1.FilesService])
 ], VideosController);
 exports.VideosController = VideosController;
 //# sourceMappingURL=videos.controller.js.map
