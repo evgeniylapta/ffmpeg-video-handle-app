@@ -19,13 +19,13 @@ function getVideoOptions(src: string): videojs.PlayerOptions {
   }
 }
 
-function  useResultVideo({ secondVideoUrl, firstVideoUrl }: TState) {
+function  useResultVideo({ secondVideoUrl, firstVideoUrl, offsetFirstVideo, filterType }: TState) {
   const [imgName, setImgName] = useState()
 
   return {
     generate: async () => {
-      console.log('secondVideoUrl, firstVideoUrl');
-      console.log(secondVideoUrl, firstVideoUrl);
+      console.log('secondVideoUrl, firstVideoUrl', 'filterType');
+      console.log(secondVideoUrl, firstVideoUrl, filterType);
 
       if (!secondVideoUrl || !firstVideoUrl) {
         alert('select both videos')
@@ -36,6 +36,8 @@ function  useResultVideo({ secondVideoUrl, firstVideoUrl }: TState) {
         const response = await axios.post('http://localhost:9000/videos/combine', {
           first: firstVideoUrl,
           second: secondVideoUrl,
+          offset: offsetFirstVideo ,
+          filterType: filterType || 'fade'
         })
 
         setImgName(response.data)
@@ -50,13 +52,13 @@ function  useResultVideo({ secondVideoUrl, firstVideoUrl }: TState) {
 type TState = {
   firstVideoUrl: string
   secondVideoUrl: string
+  offsetFirstVideo?: string
+  filterType: 'fade' | 'radial' | 'hlslice' | 'vuslice' | 'hblur'
 }
 
+
 function App() {
-  const [shouldCombine, setShouldCombine] = useState(false);
-
-  const [state, setState] = useSetState<TState>()
-
+  const [state, setState] = useSetState<TState>({firstVideoUrl: "", offsetFirstVideo: "", secondVideoUrl: "", filterType:'fade'})
   // const isResultGenerationEnabled = !!state.firstVideoUrl && !!state.secondVideoUrl
 
   const { imgUrl: resultVideoUrl, generate } = useResultVideo(state)
@@ -65,19 +67,34 @@ function App() {
 
   return (
     <div className="app">
-      <SingleVideo title="First video" onVideoGenerated={(url) => setState({ firstVideoUrl: url })} />
+      <SingleVideo title="First video" onVideoGenerated={(url, duration) =>{
+        console.log('url', url)
+        setState({ firstVideoUrl: url, offsetFirstVideo: duration.toString()})
+      }} />
 
       <hr/>
 
-      <SingleVideo title="Second video" onVideoGenerated={(url) => setState({ secondVideoUrl: url })} />
+      <SingleVideo title="Second video" onVideoGenerated={(url) => {
+        console.log('url', url)
+        setState({ secondVideoUrl: url })
+      } } />
 
       <hr/>
-
-      <span>Combine video</span>
-      <input type="checkbox" checked={shouldCombine} onChange={(e) => setShouldCombine(e.target.checked)} />
-
+      <div>
+      <label htmlFor="filterType">Choose a filter type (default fade):</label>
       <br/>
-      <br/>
+      <select name="filterType"
+              id="filterType"
+              value={state.filterType}
+              onChange={(e)=>setState({filterType: e.target.value as TState['filterType']})}>
+        <option value='fade'>Fade</option>
+        <option value="radial">Radial</option>
+        <option value="hlslice">Hlslice</option>
+        <option value="vuslice">Vuslice</option>
+        <option value="hblur">Hblur</option>
+      </select>
+      </div>
+      <hr/>
 
       <button onClick={generate}>Generate result video</button>
 

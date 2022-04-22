@@ -44,7 +44,7 @@ export class FfmpegService {
     return path.join(__dirname, '..', '..', 'static', fileName);
   }
 
-  async combineVideos({ first, second, offset }: CombineVideosDto) {
+  async combineVideos({ first, second, offset, filterType }: CombineVideosDto) {
     try {
       const firstFilePath = this.getFilePathByName(first);
 
@@ -52,7 +52,8 @@ export class FfmpegService {
 
       const videoFormat = await this.filesService.getFormatFromFileName(first);
 
-      const resultFileName = this.filesService.generateTempFileName(videoFormat);
+      const resultFileName =
+        this.filesService.generateTempFileName(videoFormat);
 
       const resultFilePath = this.getFilePathByName(resultFileName);
 
@@ -61,8 +62,9 @@ export class FfmpegService {
         firstFilePath,
         '-i',
         secondFilePath,
+        // '-f lavfi -t 0.1 -i anullsrc=channel_layout=mono:sample_rate=44100',
         '-filter_complex',
-        '[0]settb=AVTB[v0];[1]settb=AVTB[v1]; [v0][v1]xfade=transition=hlslice:duration=1:offset=5,format=yuv420p',
+        `[0]settb=AVTB[v0];[1]settb=AVTB[v1]; [v0][v1]xfade=transition=${filterType}:duration=1:offset=${offset},format=yuv420p`,
         resultFilePath,
       ]);
 
@@ -185,7 +187,10 @@ export class FfmpegService {
     );
   }
 
-  private async videoSubtitlesAddExec(originalFileName: string, subtitlesFile: any) {
+  private async videoSubtitlesAddExec(
+    originalFileName: string,
+    subtitlesFile: any,
+  ) {
     if (!subtitlesFile) {
       return originalFileName;
     }
@@ -198,10 +203,9 @@ export class FfmpegService {
       async (originalFilePath, newFilePath) => {
         await this.execCommand([
           '-i',
-          subtitlesFilePath,
-          '-i',
           originalFilePath,
-          '-shortest',
+          '-vf',
+          `subtitles=${subtitlesFilePath}`,
           newFilePath,
         ]);
 
@@ -252,7 +256,14 @@ export class FfmpegService {
   }
 
   async generateVideo(
-    { cropOffset, cropLimit, brightness, contrast, gamma, saturation }: GenerateVideoDto,
+    {
+      cropOffset,
+      cropLimit,
+      brightness,
+      contrast,
+      gamma,
+      saturation,
+    }: GenerateVideoDto,
     video: any,
     audio: any,
     logo: any,
@@ -261,10 +272,18 @@ export class FfmpegService {
     try {
       let videoName = await this.filesService.createFile(video);
       videoName = await this.videoAddAudioExec(videoName, audio);
+      videoName = await this.videoCropExec(videoName, {
+        cropOffset,
+        cropLimit,
+      });
+      videoName = await this.videoFiltersExec(videoName, {
+        brightness,
+        contrast,
+        gamma,
+        saturation,
+      });
       videoName = await this.logoAddVideoExec(videoName, logo);
-      videoName = await this.videoCropExec(videoName, {cropOffset, cropLimit,});
-      videoName = await this.videoFiltersExec(videoName, { brightness, contrast, gamma, saturation });
-      // videoName = await this.videoSubtitlesAddExec(videoName, subtitles);
+      videoName = await this.videoSubtitlesAddExec(videoName, subtitles);
 
       return videoName;
     } catch (e) {

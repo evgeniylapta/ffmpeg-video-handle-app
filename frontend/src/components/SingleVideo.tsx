@@ -87,7 +87,20 @@ function useGenerate(
   }
 }
 
-const SingleVideo: FC<{ title: string, onVideoGenerated: (url: string) => void }> = ({ title, onVideoGenerated }) => {
+const getVideoDuration = (file:any) =>{
+return  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const media = new Audio(reader.result as any);
+      media.onloadedmetadata = () => resolve(media.duration);
+    };
+    reader.readAsDataURL(file);
+    reader.onerror = (error) => reject(error);
+  });
+
+}
+
+const SingleVideo: FC<{ title: string, onVideoGenerated: (url: string, duration: number) => void }> = ({ title, onVideoGenerated }) => {
   const [state, setState] = useSetState<TState>({})
   const videoInputRef = useRef<any>()
   const logoInputRef = useRef<any>()
@@ -181,6 +194,10 @@ const SingleVideo: FC<{ title: string, onVideoGenerated: (url: string) => void }
           Gamma (from 0.1 to 10, default 1)
           <br/>
           <input type="text" value={gamma} onChange={(e) => setState({ gamma: e.target.value })}/>
+
+          <br/>
+          <br/>
+
         </div>
       </div>
 
@@ -188,11 +205,11 @@ const SingleVideo: FC<{ title: string, onVideoGenerated: (url: string) => void }
       <br/>
       <br/>
 
-      <button onClick={() => {generate(state, (url) => {
-        console.log('url');
-        console.log(url);
+      <button onClick={() => {generate(state, async (url) => {
         setState({ imageSrc: url })
-        onVideoGenerated(url)
+        getVideoDuration(videoInputRef.current.files[0]).then((duration)=>{
+          onVideoGenerated(url, duration as number - 1)
+        })
       })}}>Make video</button>
     </div>
   )

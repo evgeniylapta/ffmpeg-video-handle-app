@@ -6,7 +6,7 @@ export declare class FfmpegService {
     constructor(filesService: FilesService);
     private execCommand;
     private getFilePathByName;
-    combineVideos({ first, second, offset }: CombineVideosDto): Promise<string>;
+    combineVideos({ first, second, offset, filterType }: CombineVideosDto): Promise<string>;
     private nextFileGenerationWrap;
     private videoCropExec;
     private removeFile;
@@ -14,5 +14,5 @@ export declare class FfmpegService {
     private videoAddAudioExec;
     private videoSubtitlesAddExec;
     private videoFiltersExec;
-    generateVideo({ cropOffset, cropLimit, brightness, contrast, gamma, saturation }: GenerateVideoDto, video: any, audio: any, logo: any, subtitles: any): Promise<string>;
+    generateVideo({ cropOffset, cropLimit, brightness, contrast, gamma, saturation, }: GenerateVideoDto, video: any, audio: any, logo: any, subtitles: any): Promise<string>;
 }

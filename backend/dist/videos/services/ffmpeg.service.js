@@ -43,7 +43,7 @@ let FfmpegService = class FfmpegService {
     getFilePathByName(fileName) {
         return path.join(__dirname, '..', '..', 'static', fileName);
     }
-    async combineVideos({ first, second, offset }) {
+    async combineVideos({ first, second, offset, filterType }) {
         try {
             const firstFilePath = this.getFilePathByName(first);
             const secondFilePath = this.getFilePathByName(second);
@@ -56,7 +56,7 @@ let FfmpegService = class FfmpegService {
                 '-i',
                 secondFilePath,
                 '-filter_complex',
-                '[0]settb=AVTB[v0];[1]settb=AVTB[v1]; [v0][v1]xfade=transition=hlslice:duration=1:offset=5,format=yuv420p',
+                `[0]settb=AVTB[v0];[1]settb=AVTB[v1]; [v0][v1]xfade=transition=${filterType}:duration=1:offset=${offset},format=yuv420p`,
                 resultFilePath,
             ]);
             return resultFileName;
@@ -146,10 +146,9 @@ let FfmpegService = class FfmpegService {
         return await this.nextFileGenerationWrap(originalFileName, async (originalFilePath, newFilePath) => {
             await this.execCommand([
                 '-i',
-                subtitlesFilePath,
-                '-i',
                 originalFilePath,
-                '-shortest',
+                '-vf',
+                `subtitles=${subtitlesFilePath}`,
                 newFilePath,
             ]);
             this.removeFile(subtitlesFilePath);
@@ -182,13 +181,22 @@ let FfmpegService = class FfmpegService {
             ]);
         });
     }
-    async generateVideo({ cropOffset, cropLimit, brightness, contrast, gamma, saturation }, video, audio, logo, subtitles) {
+    async generateVideo({ cropOffset, cropLimit, brightness, contrast, gamma, saturation, }, video, audio, logo, subtitles) {
         try {
             let videoName = await this.filesService.createFile(video);
             videoName = await this.videoAddAudioExec(videoName, audio);
+            videoName = await this.videoCropExec(videoName, {
+                cropOffset,
+                cropLimit,
+            });
+            videoName = await this.videoFiltersExec(videoName, {
+                brightness,
+                contrast,
+                gamma,
+                saturation,
+            });
             videoName = await this.logoAddVideoExec(videoName, logo);
-            videoName = await this.videoCropExec(videoName, { cropOffset, cropLimit, });
-            videoName = await this.videoFiltersExec(videoName, { brightness, contrast, gamma, saturation });
+            videoName = await this.videoSubtitlesAddExec(videoName, subtitles);
             return videoName;
         }
         catch (e) {
